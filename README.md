@@ -1,14 +1,22 @@
 # NeoRTC
 
-
+TBD
 
 # Installation
 
-TBD
+clone this repo
+
+   git clone https://github.com/MagnusThor/NeoRTC.git
+
+
+or reference the neortc.js for development purpose using
+
+    https://rawgit.com/MagnusThor/NeoRTC/master/src/neortc.js
+   
 
 # Documentation
 
-## NeoRTC.Conference(settings:RTCConfig): NeoRTC.App
+## NeoRTC.Conference(?settings:RTCConfig): NeoRTC.App
 
     var app = new NeoRTC.Conference();
 

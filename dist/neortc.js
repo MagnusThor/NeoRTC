@@ -3903,13 +3903,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-
-
 var NeoRTCApp = (function () {
-
-  
-
-    var ctor = function (config) {
+    var neoRTC = function (config) {
 
         var self = this;
         var factory;
@@ -4004,13 +3999,13 @@ var NeoRTCApp = (function () {
         this.factory = factory;
     }
 
-    ctor.prototype.sendInstantMessage = function (message) {
+    neoRTC.prototype.sendInstantMessage = function (message) {
         this.factory.GetProxy("contextBroker").Invoke("instantMessage",
             message
         );
     }
 
-    ctor.prototype.log = function (message, data) {
+    neoRTC.prototype.log = function (message, data) {
         var logEl = document.querySelector("#log-el");
         if (!logEl && console) {
             console.log(message, JSON.stringify(data || {}));
@@ -4022,30 +4017,30 @@ var NeoRTCApp = (function () {
     }
 
 
-    ctor.prototype.rtcClient = {};
-    ctor.prototype.OnLocalStream = function (mediaStream) {
+    neoRTC.prototype.rtcClient = {};
+    neoRTC.prototype.OnLocalStream = function (mediaStream) {
     }
-    ctor.prototype.OnReady = function () {
+    neoRTC.prototype.OnReady = function () {
     }
-    ctor.prototype.AddLocalStream = function (mediaStream) {
+    neoRTC.prototype.AddLocalStream = function (mediaStream) {
         this.rtcClient.AddLocalStream(mediaStream);
     }
-    ctor.prototype.ChangeContext = function (ctx) {
+    neoRTC.prototype.ChangeContext = function (ctx) {
         this.rtcClient.ChangeContext(ctx)
     }
 
 
-    ctor.prototype.OnInstantMessage = function(instantMessage){
+    neoRTC.prototype.OnInstantMessage = function(instantMessage){
             
     }
 
-    ctor.prototype.OnRemoteStream = function (a, b) {
+    neoRTC.prototype.OnRemoteStream = function (a, b) {
     }
 
-    ctor.prototype.OnRemoteStreamlost = function (a) {
+    neoRTC.prototype.OnRemoteStreamlost = function (a) {
     }
 
-    ctor.prototype.getUserMedia = function (
+    neoRTC.prototype.getUserMedia = function (
         constraints,
         cb) {
         var self = this;
@@ -4058,7 +4053,7 @@ var NeoRTCApp = (function () {
         });
     }
 
-    return ctor;
+    return neoRTC;
 })();
 
 

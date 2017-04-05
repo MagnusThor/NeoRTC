@@ -1,6 +1,6 @@
 {
   "name": "neo_rtc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A sample client implementation of thor-io.vnext RTC client",
   "main": "index.js",
   "scripts": {
