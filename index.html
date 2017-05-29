@@ -1,130 +1,304 @@
 <html>
+
 <head>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
     <style>
-        #local-video{
-             position: absolute;
-             top:10px;
-             right: 10px;
+        label {
+            display: block;
+            margin: 10px 0;
         }
+
         #local-video video {
             max-width: 120px;
             max-height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-           
         }
-        
+
         #remote-videos {
             padding: 10px;
-           
         }
+
         #remote-videos video {
-             max-height:  160px;
+            max-height: 80px;
+            float: left;
+            margin: 10px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.4);
         }
-        
-        
-        #instant-messages
-        {
+
+        #instant-messages {
+            overflow: auto;
             min-height: 200px;
+            max-height: 200px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.85);
+            color: #000;
+            margin-bottom: 10px;
+            border-radius: 4px;
         }
-        #instant-messages p{
-            padding: 1px;
-            color:#ff0000;
+
+        #instant-messages time {
+            color: #333;
+            margin-right: 10px;
         }
-        #log-el{
+
+        #instant-messages mark {
+            color: #333;
+            background: none;
+            margin-right: 10px;
+        }
+
+        .join {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 58px;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
             padding: 10px;
-            background: #dadada;
+        }
+
+        #fullscreen-video video {
+
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            -webkit-transform: translateX(-50%) translateY(-50%);
+            transform: translateX(-50%) translateY(-50%);
+            background-size: cover;
+        }
+
+        #chat-controls {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
         }
     </style>
 </head>
 
 <body>
-    <h1>NeoRTC sample</h1>
-    <!-- placeholder for local Mediastream -->
-    <div id="local-video">
-    </div>
-    <!-- placeholder for remote Mediastreams -->
-    <div id="remote-videos">
-    </div>
 
-    <hr>
 
-    <input type="text" id="instant-message" placeholder="Enter a chat message">
 
-    <div id="instant-messages">
+    <div id="fullscreen-video">
+        <video src="http://ui.specbee.com/sample/bird.mp4" muted autoplay/>
     </div>
 
-    <div id="log-el">
+
+    <div class="join">
+        <div class="container">
+            <div class="col-xs-12">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" id="btn-join">Join conference</button>
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" style="height: 34px;" aria-haspopup="true"
+                        aria-expanded="false">
+    <span class="caret"></span>
+
+  </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Use video and audio</a></li>
+                        <li><a href="#">Use audio only</a></li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <div id="conference">
+        <div class="container">
+
+
+
+
+            <div class="row">
+
+                <div class="col-xs-12">
+                    <div id="remote-videos">
+
+                        <!--<video poster="http://placehold.it/320x240"></video>
+                        <video poster="http://placehold.it/320x240"></video>-->
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <section id="chat-controls" class="hide">
+
+        <div class="container">
+
+
+
+
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div id="instant-messages">
+                        &nbsp;
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="form-group">
+                        <input type="text" id="instant-message" placeholder="Enter a chat message" class="form-control">
+                    </div>
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+
+
+    </section>
+
+
+
+
+
+
+
+
+
+
+    <div id="log-el" class="hide">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+
 
     <script src="/dist/neortc.js"></script>
     <script>
-    var app; 
-    document.addEventListener("DOMContentLoaded", function(evt) {
-    app = new NeoRTC.Conference();
-    app.OnInstantMessage = function(message){
-        var p = document.createElement("p");
-        p.textContent = message.text;
-        var parent = document.querySelector("#instant-messages")
-        parent.insertBefore(p,parent.firstChild);
+        var app;
 
-    }
+        $(function () {
 
-    app.OnLocalStream = function (mediaStream) {
-    }
 
-    app.OnRemoteStream = function (mediaStream) {
-        var video = document.createElement("video");
-        video.classList.add("remote-stream");
-        video.id = mediaStream.id;
-        video.srcObject = mediaStream;
-        video.oncanplay = function () {
-            video.play();
-        }
-        document.querySelector("#remote-videos").appendChild(video);
-    }
-
-    app.OnRemoteStreamlost = function (mediaStreamId) {
-        var video = document.querySelector("#" + mediaStreamId);
-        document.querySelector("#remote-videos").removeChild(video);
-    }
-
-    app.OnReady = function () {
-
-        window.onhashchange = function(hashchange){
-            app.ChangeContext(location.hash);
-        }
-
-        // add an event listener for the IM thing
-
-        document.querySelector("#instant-message").addEventListener("keydown",function(evt){
-            if(evt.keyCode === 13){
-                evt.preventDefault();
-                app.sendInstantMessage({text:this.value});
-                this.value = "";
+            var setFullScreen = function (src) {
+                var el = $("#fullscreen-video video")[0];
+                el.srcObject = src;
             }
-        });
 
-        // Get user media, and add the video to he UI
-        app.getUserMedia( { video: true, audio: false },function (mediaStream) {
-            
+            app = new NeoRTC.Conference();
 
-            app.ChangeContext(location.hash == "" ? "myroom" : location.hash);
 
-            var video = document.createElement("video");
-            video.muted = true;
-            video.srcObject = mediaStream;
-            video.oncanplay = function () {
-                video.play();
+            app.OnInstantMessage = function (message) {
+                var dt = new Date(message.dt);
+                var p = $("<p>");
+                p.text(message.text);
+                var time = $("<time>");
+                time.text(dt.getHours().toString() + ":" + dt.getMinutes().toString());
+                var uid = $("<mark>");
+                uid.text(message.uid);
+                $(p).prepend(uid);
+                $(p).prepend(time);
+
+                $("#instant-messages").prepend(p);
             }
-            document.querySelector("#local-video").appendChild(video);
+
+            app.OnLocalStream = function (mediaStream) {}
+
+            app.OnRemoteStream = function (mediaStream) {
+                var video = document.createElement("video");
+                video.classList.add("remote-stream");
+                video.id = mediaStream.id;
+                video.srcObject = mediaStream;
+                video.oncanplay = function () {
+                    video.play();
+                }
+                document.querySelector("#remote-videos").appendChild(video);
+
+                $(video).click(function (evt) {
+                    setFullScreen(evt.target.srcObject);
+                });
+
+            }
+
+            app.OnRemoteStreamlost = function (mediaStreamId) {
+                var video = document.querySelector("#" + mediaStreamId);
+                document.querySelector("#remote-videos").removeChild(video);
+            }
+
+            app.OnReady = function () {
+
+                window.onhashchange = function (hashchange) {
+                    //        app.ChangeContext(location.hash);
+                }
+
+                // add an event listener for the IM thing
+
+                document.querySelector("#instant-message").addEventListener("keydown", function (evt) {
+                    if (evt.keyCode === 13) {
+                        var model = {
+                            text: this.value,
+                            uid: 'Foo',
+                            dt: new Date()
+                        };
+                        evt.preventDefault();
+                        app.sendInstantMessage(model);
+                        this.value = "";
+
+                        console.log("do ajax post tp mvc", model);
+
+                    }
+                });
+
+                $("#btn-join").on("click", function () {
+
+                    app.getUserMedia({
+                        video: true,
+                        audio: false
+                    }, function (mediaStream) {
+
+                        $(".join").fadeOut();
+
+                        app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
+
+                        var video = document.createElement("video");
+                        video.muted = true;
+                        video.srcObject = mediaStream;
+                        video.oncanplay = function () {
+                            video.play();
+                        }
+                        $("#remote-videos").prepend(video).hide().fadeIn();
+
+                        $("#chat-controls").removeClass("hide").fadeIn(function () {
+
+                        });
+
+
+
+                        $(video).click(function (evt) {
+                            setFullScreen(evt.target.srcObject);
+
+                        });
+
+                    });
+
+                });
+
+                // Get user media, and add the video to he UI
+
+            }
+
+
 
         });
-    }
-
- });
-
-
     </script>
 
 </body>

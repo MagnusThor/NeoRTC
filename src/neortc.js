@@ -104,6 +104,11 @@ var NeoRTCApp = (function () {
         );
     }
 
+
+    neoRTC.prototype.addDataChannel = function(name){
+        return this.rtcClient.CreateDataChannel(name)
+    }
+
     neoRTC.prototype.log = function (message, data) {
         var logEl = document.querySelector("#log-el");
         if (!logEl && console) {
