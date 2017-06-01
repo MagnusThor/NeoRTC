@@ -1,10 +1,8 @@
 import { ThorIOClient } from 'thor-io.client-vnext'
 import 'webrtc-adapter';
 
-
 var NeoRTCApp = (function () {
-    var neoRTC = function (config) {
-
+    var neoRTC = function (brokerUrl,config) {
         var self = this;
         var factory;
 
@@ -18,10 +16,9 @@ var NeoRTCApp = (function () {
         };
 
         this.log("Created an instance of RTCApp");
-
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
-        var url = "ws://webrtclab2.herokuapp.com";
+        var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
         factory = new ThorIOClient.Factory(url, ["contextBroker"]);
 
         factory.OnClose = function (reason) {
@@ -38,11 +35,9 @@ var NeoRTCApp = (function () {
             self.log("Got a connection to the broker");
             self.rtcClient = new ThorIOClient.WebRTC(broker, rtcConfig);
 
-
             self.rtcClient.OnError = function (err) {
                 self.log("rtcClient error", err);
             }
-
             // When we got a so-called context on the broker
             // OnContextCreated is invoked. And by that
             // this client has a "room/context/space" for 1-n Peer's'

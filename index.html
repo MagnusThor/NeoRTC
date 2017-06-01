@@ -3,6 +3,7 @@
 <head>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
         crossorigin="anonymous">
+
     <style>
         label {
             display: block;
@@ -49,17 +50,18 @@
         }
 
         .join {
+            width: 100%;
+          
             position: absolute;
             top: 0;
-            width: 100%;
+          
             height: 58px;
             background: rgba(0, 0, 0, 0.4);
             z-index: 1000;
-            padding: 10px;
+           
         }
 
         #fullscreen-video video {
-
             position: fixed;
             top: 50%;
             left: 50%;
@@ -77,69 +79,47 @@
             bottom: 10px;
             width: 100%;
         }
+        
     </style>
 </head>
 
 <body>
 
-
+ 
 
     <div id="fullscreen-video">
         <video src="http://ui.specbee.com/sample/bird.mp4" muted autoplay/>
     </div>
 
 
-    <div class="join">
-        <div class="container">
+    <section class="join">
+        <div class="row">
             <div class="col-xs-12">
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary" id="btn-join">Join conference</button>
                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" style="height: 34px;" aria-haspopup="true"
                         aria-expanded="false">
-    <span class="caret"></span>
-
-  </button>
+                        <span class="caret"></span>
+                    </button>
                     <ul class="dropdown-menu">
                         <li><a href="#">Use video and audio</a></li>
                         <li><a href="#">Use audio only</a></li>
-
                     </ul>
-                </div>
+                </div> 
             </div>
         </div>
+    </section>
 
-    </div>
-
-    <div id="conference">
-        <div class="container">
-
-
-
-
+    <section id="conference">
             <div class="row">
-
                 <div class="col-xs-12">
                     <div id="remote-videos">
-
-                        <!--<video poster="http://placehold.it/320x240"></video>
-                        <video poster="http://placehold.it/320x240"></video>-->
-
                     </div>
                 </div>
-
             </div>
-        </div>
-    </div>
+    </section>
 
-
-    <section id="chat-controls" class="hide">
-
-        <div class="container">
-
-
-
-
-
+    <section id="chat-controls" class="hide" data-uid="Foo">
             <div class="row">
                 <div class="col-xs-12">
                     <div id="instant-messages">
@@ -156,23 +136,7 @@
 
                 </div>
             </div>
-
-
-
-        </div>
-
-
-
     </section>
-
-
-
-
-
-
-
-
-
 
     <div id="log-el" class="hide">
     </div>
@@ -194,7 +158,7 @@
                 el.srcObject = src;
             }
 
-            app = new NeoRTC.Conference();
+            app = new NeoRTC.Conference("ws://webrtc-lab.herokuapp.com");
 
 
             app.OnInstantMessage = function (message) {
