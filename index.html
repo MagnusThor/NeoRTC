@@ -5,24 +5,25 @@
         crossorigin="anonymous">
 
     <style>
-        label {
-            display: block;
-            margin: 10px 0;
-        }
+      
+
+      
 
         #local-video video {
             max-width: 120px;
             max-height: 120px;
         }
 
+       
+
         #remote-videos {
-            padding: 10px;
+        
         }
 
         #remote-videos video {
             max-height: 80px;
             float: left;
-            margin: 10px;
+            margin:10px;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.4);
         }
@@ -49,18 +50,6 @@
             margin-right: 10px;
         }
 
-        .join {
-            width: 100%;
-          
-            position: absolute;
-            top: 0;
-          
-            height: 58px;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-           
-        }
-
         #fullscreen-video video {
             position: fixed;
             top: 50%;
@@ -75,68 +64,85 @@
         }
 
         #chat-controls {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
+      
+         
         }
+      
+      
         
     </style>
 </head>
 
 <body>
 
- 
+
+
+ <div class="container">
+
 
     <div id="fullscreen-video">
         <video src="http://ui.specbee.com/sample/bird.mp4" muted autoplay/>
     </div>
 
 
-    <section class="join">
-        <div class="row">
+  
+        <div class="row join">
             <div class="col-xs-12">
+         
+              <div class="panel panel-default">
+                 <div class="panel-body">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary" id="btn-join">Join conference</button>
+                    <button type="button" class="btn btn-primary" id="btn-join-default">Join conference</button>
                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" style="height: 34px;" aria-haspopup="true"
                         aria-expanded="false">
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a href="#">Use video and audio</a></li>
-                        <li><a href="#">Use audio only</a></li>
+                        <li><a href="#" id="btn-join-av">Use video and audio</a></li>
+                        <li><a href="#" id="btn-join-a">Use audio only</a></li>
                     </ul>
                 </div> 
-            </div>
-        </div>
-    </section>
-
-    <section id="conference">
-            <div class="row">
-                <div class="col-xs-12">
-                    <div id="remote-videos">
-                    </div>
+                 </div>
                 </div>
             </div>
-    </section>
+        </div>
+  
 
-    <section id="chat-controls" class="hide" data-uid="Foo">
-            <div class="row">
+   
+            <div class="row" id="conference">
                 <div class="col-xs-12">
+
+             
+                    <div id="remote-videos">
+                    </div>
+                
+                </div>
+            </div>
+
+
+    <section id="chat-controls" class="hide" data-uid="">
+       <div class="row">
+           <div class="col-xs-12">
+           
                     <div id="instant-messages">
                         &nbsp;
                     </div>
-                </div>
+               
 
-            </div>
-            <div class="row">
-                <div class="col-xs-12">
+
+                    <div>
                     <div class="form-group">
                         <input type="text" id="instant-message" placeholder="Enter a chat message" class="form-control">
                     </div>
+                    </div>
 
-                </div>
-            </div>
+             </div>
+             </div>
     </section>
+
+   
+
+ </div>
 
     <div id="log-el" class="hide">
     </div>
@@ -147,11 +153,11 @@
 
 
     <script src="/dist/neortc.js"></script>
+    
     <script>
         var app;
 
         $(function () {
-
 
             var setFullScreen = function (src) {
                 var el = $("#fullscreen-video video")[0];
@@ -159,8 +165,7 @@
             }
 
             app = new NeoRTC.Conference("ws://webrtc-lab.herokuapp.com");
-
-
+            
             app.OnInstantMessage = function (message) {
                 var dt = new Date(message.dt);
                 var p = $("<p>");
@@ -203,9 +208,7 @@
                 window.onhashchange = function (hashchange) {
                     //        app.ChangeContext(location.hash);
                 }
-
                 // add an event listener for the IM thing
-
                 document.querySelector("#instant-message").addEventListener("keydown", function (evt) {
                     if (evt.keyCode === 13) {
                         var model = {
@@ -222,14 +225,13 @@
                     }
                 });
 
-                $("#btn-join").on("click", function () {
+                var joinConference = function(settings){
 
-                    app.getUserMedia({
-                        video: true,
-                        audio: false
-                    }, function (mediaStream) {
-
-                        $(".join").fadeOut();
+                    app.getUserMedia(settings, function (mediaStream) {
+                    
+                        $(".join").fadeOut(function(){
+                            $("#conference").removeClass("hide").fadeIn();
+                        });
 
                         app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
 
@@ -239,24 +241,36 @@
                         video.oncanplay = function () {
                             video.play();
                         }
+                        video.poster = "http://placehold.it/80x80?text=no+video";
+
                         $("#remote-videos").prepend(video).hide().fadeIn();
 
                         $("#chat-controls").removeClass("hide").fadeIn(function () {
-
                         });
-
-
 
                         $(video).click(function (evt) {
                             setFullScreen(evt.target.srcObject);
-
                         });
+                    });
 
+                }
+
+                $("#btn-join-default,#btn-join-av").on("click", function () {
+
+                    joinConference({
+                        video: true,
+                        audio: true
                     });
 
                 });
 
-                // Get user media, and add the video to he UI
+                $("#btn-join-a").on("click", function(){
+
+                    joinConference({
+                        video: false,
+                        audio: true
+                    });
+                });
 
             }
 
