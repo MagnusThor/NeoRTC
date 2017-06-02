@@ -5,29 +5,17 @@
         crossorigin="anonymous">
 
     <style>
-      
-
-      
-
         #local-video video {
             max-width: 120px;
             max-height: 120px;
         }
-
-       
-
-        #remote-videos {
-        
-        }
-
         #remote-videos video {
             max-height: 80px;
             float: left;
-            margin:10px;
+            margin: 10px;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.4);
         }
-
         #instant-messages {
             overflow: auto;
             min-height: 200px;
@@ -62,14 +50,6 @@
             transform: translateX(-50%) translateY(-50%);
             background-size: cover;
         }
-
-        #chat-controls {
-      
-         
-        }
-      
-      
-        
     </style>
 </head>
 
@@ -77,72 +57,80 @@
 
 
 
- <div class="container">
 
 
-    <div id="fullscreen-video">
-        <video src="http://ui.specbee.com/sample/bird.mp4" muted autoplay/>
-    </div>
+
+    <div class="container">
 
 
-  
+
+
+        <div id="fullscreen-video">
+            <video src="http://ui.specbee.com/sample/bird.mp4" muted autoplay/>
+        </div>
+
+
+
         <div class="row join">
             <div class="col-xs-12">
-         
-              <div class="panel panel-default">
-                 <div class="panel-body">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary" id="btn-join-default">Join conference</button>
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" style="height: 34px;" aria-haspopup="true"
-                        aria-expanded="false">
+
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary" id="btn-join-default">Join conference</button>
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" style="height: 34px;" aria-haspopup="true"
+                                aria-expanded="false">
                         <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" id="btn-join-av">Use video and audio</a></li>
-                        <li><a href="#" id="btn-join-a">Use audio only</a></li>
-                    </ul>
-                </div> 
-                 </div>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" id="btn-join-av">Use video and audio</a></li>
+                                <li><a href="#" id="btn-join-a">Use audio only</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-  
 
-   
-            <div class="row" id="conference">
+
+
+        <div class="row" id="conference">
+            <div class="col-xs-12">
+
+
+                <div id="remote-videos">
+                </div>
+
+            </div>
+        </div>
+
+
+        <section id="chat-controls" class="hide" data-uid="">
+            <div class="row">
                 <div class="col-xs-12">
 
-             
-                    <div id="remote-videos">
-                    </div>
-                
-                </div>
-            </div>
-
-
-    <section id="chat-controls" class="hide" data-uid="">
-       <div class="row">
-           <div class="col-xs-12">
-           
                     <div id="instant-messages">
                         &nbsp;
                     </div>
-               
-
-
                     <div>
-                    <div class="form-group">
-                        <input type="text" id="instant-message" placeholder="Enter a chat message" class="form-control">
+                        <div class="input-group">
+                            <input type="text" id="instant-message" placeholder="Enter a chat message" class="form-control">
+                            <span class="input-group-btn">
+                            <label class="btn btn-default btn-file">
+                                    SHARE <input type="file" id="share-file" style="display: none;">
+                                </label>
+                            </span>
+                        </div>
+
                     </div>
-                    </div>
 
-             </div>
-             </div>
-    </section>
+                </div>
+            </div>
+        </section>
 
-   
 
- </div>
+
+    </div>
 
     <div id="log-el" class="hide">
     </div>
@@ -153,19 +141,19 @@
 
 
     <script src="/dist/neortc.js"></script>
-    
+
     <script>
         var app;
 
         $(function () {
-
+      
             var setFullScreen = function (src) {
                 var el = $("#fullscreen-video video")[0];
                 el.srcObject = src;
             }
 
             app = new NeoRTC.Conference("ws://webrtc-lab.herokuapp.com");
-            
+
             app.OnInstantMessage = function (message) {
                 var dt = new Date(message.dt);
                 var p = $("<p>");
@@ -179,6 +167,47 @@
 
                 $("#instant-messages").prepend(p);
             }
+
+            $("#share-file").on("change", function (evt) {
+                var file = evt.target.files[0];
+                var reader = new FileReader();
+                reader.onload = (function (theFile) {
+                    return function (buffer) {
+                        var bm = app.sendFile({
+                            name:file.name,
+                            size: file.size,
+                            type: file.type
+                        }, buffer.target.result);
+                    }
+                })(file);
+                reader.readAsArrayBuffer(file);
+            });
+
+            app.OnFileReceived = function(fileinfo,blob,buffer){
+
+                var dt = new Date();
+
+                var p = $("<p>");
+                    p.text("File received.");
+                var time = $("<time>");
+
+                    time.text(dt.getHours().toString() + ":" + dt.getMinutes().toString());
+                
+                var download = $("<a>");
+                download.attr("href", URL.createObjectURL(blob));
+                download.text(fileinfo.name);
+                download.attr("download",fileinfo.name);
+
+                $(p).append(download); 
+
+                $(p).prepend(time);
+
+                 $("#instant-messages").prepend(p);
+
+
+
+            };
+
 
             app.OnLocalStream = function (mediaStream) {}
 
@@ -225,11 +254,11 @@
                     }
                 });
 
-                var joinConference = function(settings){
+                var joinConference = function (settings) {
 
                     app.getUserMedia(settings, function (mediaStream) {
-                    
-                        $(".join").fadeOut(function(){
+
+                        $(".join").fadeOut(function () {
                             $("#conference").removeClass("hide").fadeIn();
                         });
 
@@ -245,8 +274,7 @@
 
                         $("#remote-videos").prepend(video).hide().fadeIn();
 
-                        $("#chat-controls").removeClass("hide").fadeIn(function () {
-                        });
+                        $("#chat-controls").removeClass("hide").fadeIn(function () {});
 
                         $(video).click(function (evt) {
                             setFullScreen(evt.target.srcObject);
@@ -264,7 +292,7 @@
 
                 });
 
-                $("#btn-join-a").on("click", function(){
+                $("#btn-join-a").on("click", function () {
 
                     joinConference({
                         video: false,

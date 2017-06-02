@@ -14,12 +14,11 @@ var NeoRTCApp = (function () {
                 }
             ]
         };
-
         this.log("Created an instance of RTCApp");
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
-        factory = new ThorIOClient.Factory(url, ["contextBroker"]);
+        factory = new ThorIOClient.Factory(url, ["neoBroker"]);
 
         factory.OnClose = function (reason) {
             self.log(reason);
@@ -27,6 +26,11 @@ var NeoRTCApp = (function () {
 
         // We are connected to the "backend"
         factory.OnOpen = function (broker) {
+            broker.On("fileShare",function(fileInfo,arrayBuffer) {                
+                    self.OnFileReceived(fileInfo,new Blob(new Uint8Array(arrayBuffer),{
+                        type: fileInfo.type
+                    }),arrayBuffer)
+            });
 
             broker.On("instantMessage",function(im){
                 self.OnInstantMessage(im);
@@ -49,6 +53,8 @@ var NeoRTCApp = (function () {
               
                 self.OnLocalStream(mediaStream)
             }
+
+
 
             // When we are on a new context, connect to it
             self.rtcClient.OnContextChanged = function (ctx) {
@@ -93,8 +99,16 @@ var NeoRTCApp = (function () {
         this.factory = factory;
     }
 
+    neoRTC.prototype.sendFile = function(fileInfo,buffer){
+      
+        var message = new ThorIOClient.Message("fileShare",
+                  fileInfo,"neoBroker",buffer);
+                    let bm = new ThorIOClient.BinaryMessage(message.toString(),buffer);
+                  this.factory.GetProxy("neoBroker").InvokeBinary(bm.Buffer);
+    }
+
     neoRTC.prototype.sendInstantMessage = function (message) {
-        this.factory.GetProxy("contextBroker").Invoke("instantMessage",
+        this.factory.GetProxy("neoBroker").Invoke("instantMessage",
             message
         );
     }
@@ -117,6 +131,12 @@ var NeoRTCApp = (function () {
 
 
     neoRTC.prototype.rtcClient = {};
+
+
+    neoRTC.prototype.OnFileReceived = function(fileIinfo,blob,buffer){
+
+    }
+
     neoRTC.prototype.OnLocalStream = function (mediaStream) {
     }
     neoRTC.prototype.OnReady = function () {
