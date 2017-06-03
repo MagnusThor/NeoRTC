@@ -50,6 +50,13 @@
             transform: translateX(-50%) translateY(-50%);
             background-size: cover;
         }
+
+        #btn-screenshare{
+            position: absolute;
+            top: 10px;
+            z-index: 100;
+            right:10px;
+        }
     </style>
 </head>
 
@@ -57,7 +64,7 @@
 
 
 
-
+    <button id="btn-screenshare" class="btn btn-default hide">Screen share</button>
 
 
     <div class="container">
@@ -152,8 +159,9 @@
                 el.srcObject = src;
             }
 
-            app = new NeoRTC.Conference("ws://webrtc-lab.herokuapp.com");
+            app = new NeoRTC.Conference("wss://webrtc-lab.herokuapp.com");
 
+    
             app.OnInstantMessage = function (message) {
                 var dt = new Date(message.dt);
                 var p = $("<p>");
@@ -254,6 +262,57 @@
                     }
                 });
 
+
+                var screenShare = function(){
+                        if (chrome.runtime) {
+
+                        var extensionId = "pjljkkmedcfkbndfjcomilkiibpafaah";
+                        var extPort = chrome.runtime.connect(extensionId);
+                        if (extPort) {
+                            extPort.onMessage.addListener(function (msg) {
+
+                                var constraints = {
+                                    video: {
+                                        mandatory: {
+                                            chromeMediaSource: 'desktop',
+                                            chromeMediaSourceId: msg.desktopId,
+                                            minWidth: 1280,
+                                            maxWidth: 1280,
+                                            minHeight: 720,
+                                            maxHeight: 720
+                                        }
+                                    }
+                                };
+                                navigator.getUserMedia(constraints, function (mediaStream) {
+                                    app.AddLocalStream(mediaStream);
+                                        var video = document.createElement("video");
+                                        video.muted = true;
+                                        video.srcObject = mediaStream;
+                                        video.oncanplay = function () {
+                                            video.play();
+                                        }
+                                        video.poster = "//placehold.it/80x80?text=no+video";
+                                        $("#remote-videos").prepend(video).hide().fadeIn();
+                                }, function (err) {
+                                    console.log(err);
+                                });
+                            });
+                            $("#btn-screenshare").removeClass("hide").on("click", function () {
+                                extPort.postMessage("show", "dialog");
+                            });
+
+                            app.rtcClient.Peers.forEach( function(peer) {
+                               peer.RTCPeer.close();
+                            });
+                                
+                            app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
+
+
+                        }
+                    }
+
+                }
+
                 var joinConference = function (settings) {
 
                     app.getUserMedia(settings, function (mediaStream) {
@@ -280,7 +339,7 @@
                             setFullScreen(evt.target.srcObject);
                         });
                     });
-
+                    screenShare();
                 }
 
                 $("#btn-join-default,#btn-join-av").on("click", function () {

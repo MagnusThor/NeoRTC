@@ -14,7 +14,7 @@ var NeoRTCApp = (function () {
                 }
             ]
         };
-        this.log("Created an instance of RTCApp");
+        this.log("Created an instance of NeoRTCApp");
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
@@ -26,8 +26,15 @@ var NeoRTCApp = (function () {
 
         // We are connected to the "backend"
         factory.OnOpen = function (broker) {
-            broker.On("fileShare",function(fileInfo,arrayBuffer) {                
-                    self.OnFileReceived(fileInfo,new Blob(new Uint8Array(arrayBuffer),{
+            broker.On("fileShare",function(fileInfo,arrayBuffer) { 
+                console.log(arguments);
+
+
+                    var arr = new Uint8Array(arrayBuffer);
+
+                    console.log(arr);
+
+                    self.OnFileReceived(fileInfo,new Blob([arr],{
                         type: fileInfo.type
                     }),arrayBuffer)
             });
