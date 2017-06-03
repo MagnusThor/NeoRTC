@@ -1,4 +1,4 @@
-# Som kind of guide how to develop , install etc
+# Some kind of guide how install
 
 
 Enable **developer mode** in chrome://extensions/
@@ -10,14 +10,10 @@ https://chrome.google.com/webstore/detail/chrome-apps-extensions-de/ohmmkhmmmpcn
 Under chrome://extension choose "Load unpacked extension" , navigate to the root folder of the extension , thats where the manifest.json file is... , after loading successfully you should
 see an ID:....  , this is the id of the extension of yours ( see extensionId below in code examples)..
 
+## Connect your NeoRTC instance to the extension
 
 
-
-## Connect your NerRTC instance to the extension
-
-
-
-    var app = NeRTC.Conference(); 
+    var app = NeRTC.Conference(url); 
 
     if (chrome.runtime) {
         var extensionId = "lelhnjfbpedmhkniggeecbammdhpfeik"; // replace with your extensionId
@@ -39,13 +35,12 @@ see an ID:....  , this is the id of the extension of yours ( see extensionId bel
                 }
             };
 
-            app.getUserMedia(constraints, function(stream)
-            {
+                 navigator.getUserMedia(constraints, function (mediaStream) {  
 
-            });
+                     app.AddLocalStream(mediaStream);
 
-
-
+                 },function(err){});   
+        
 
         });
 
