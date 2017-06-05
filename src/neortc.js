@@ -146,6 +146,34 @@ var NeoRTCApp = (function () {
         this.rtcClient.ChangeContext(ctx)
     }
 
+    neoRTC.prototype.getPeers = function(){
+        return this.rtcClient.Peers.map( function(peer) { 
+            return {    
+            peerId:
+            peer.id}
+         })
+    }
+    neoRTC.prototype.getPeerIndex = function(id){
+        return this.rtcClient.Peers.findIndex ( function (pre) { return pre.id === id });
+    }
+    neoRTC.prototype.getPeer = function(index){
+        return this.rtcClient.Peers[index];
+    }
+    neoRTC.prototype.reconnectAll = function() {
+            var allPeers = this.getPeers();
+            var self = this;
+            allPeers.forEach( function(peer,index){
+                var peer = self.getPeerIndex(peer.peerId);                 
+                  self.rtcClient.Peers[peer].RTCPeer.close()
+                  self.rtcClient.Peers[peer].streams.forEach( function(stream){
+                        self.OnRemoteStreamlost(stream.id);
+                  });
+            });
+            this.rtcClient.Peers = [];
+            this.rtcClient.Connect(allPeers);
+            return allPeers;
+    }
+
 
     neoRTC.prototype.OnInstantMessage = function(instantMessage){
             

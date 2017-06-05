@@ -17,7 +17,7 @@
 
     },
     "externally_connectable": {
-        "matches": ["https://localhost:*/*", "https://magnusthor.github.io/NeoRTC/*", "https://localhost:8443/*"]
+        "matches": ["https://localhost:*/*", "https://magnusthor.github.io/NeoRTC/*"]
     },
 
     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"

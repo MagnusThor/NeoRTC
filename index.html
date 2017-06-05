@@ -9,10 +9,16 @@
             max-width: 120px;
             max-height: 120px;
         }
+        #remote-videos{
+              min-height: 100px;
+        }
         #remote-videos video {
             max-height: 80px;
+            border:1px solid #dadada;
             float: left;
-            margin: 10px;
+            margin-top: 10px;
+            margin-left:0px;
+            margin-right: 10px;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.4);
         }
@@ -52,10 +58,10 @@
         }
 
         #btn-screenshare{
-            position: absolute;
-            top: 10px;
-            z-index: 100;
-            right:10px;
+                position: absolute;
+                bottom: 10px;
+                z-index: 100;
+                right: 15px;
         }
     </style>
 </head>
@@ -64,8 +70,7 @@
 
 
 
-    <button id="btn-screenshare" class="btn btn-default hide">Screen share</button>
-
+  
 
     <div class="container">
 
@@ -103,6 +108,9 @@
 
         <div class="row" id="conference">
             <div class="col-xs-12">
+
+                  <button id="btn-screenshare" class="btn btn-success hide">Screen share</button>
+
 
 
                 <div id="remote-videos">
@@ -264,15 +272,14 @@
                 var screenShare = function(){
                         if (chrome.runtime) {
 
-
                         var extensionId = "pjljkkmedcfkbndfjcomilkiibpafaah";
                         var extPort = chrome.runtime.connect(extensionId);
-                          console.log("#extPort",extPort);
+                        
                         if (extPort) {
 
                         $("#btn-screenshare").removeClass("hide").on("click", function () {
-                                                        extPort.postMessage("show", "dialog");
-                                                    });
+                                extPort.postMessage("show", "dialog");
+                        });
 
                             extPort.onMessage.addListener(function (msg) {
 
@@ -290,6 +297,7 @@
                                 };
                                 navigator.getUserMedia(constraints, function (mediaStream) {
                                     app.AddLocalStream(mediaStream);
+
                                         var video = document.createElement("video");
                                         video.muted = true;
                                         video.srcObject = mediaStream;
@@ -299,6 +307,9 @@
                                         video.poster = "//placehold.it/80x80?text=no+video";
                                         $("#remote-videos").prepend(video).hide().fadeIn();
 
+                                        window.setTimeout(function(){
+                                            app.reconnectAll();
+                                        },1500);
                                   
 
                                 }, function (err) {
@@ -307,11 +318,7 @@
                             });
                            
 
-                            // app.rtcClient.Peers.forEach( function(peer) {
-                            //    peer.RTCPeer.close();
-                            // });
-                                
-                    //        app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
+                          
 
 
                         }
