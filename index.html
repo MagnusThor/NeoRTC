@@ -159,7 +159,7 @@
                 el.srcObject = src;
             }
 
-            app = new NeoRTC.Conference("wss://webrtclab2.herokuapp.com");
+            app = new NeoRTC.Conference("wss://webrtc-lab.herokuapp.com");
 
     
             app.OnInstantMessage = function (message) {
@@ -266,9 +266,16 @@
                 var screenShare = function(){
                         if (chrome.runtime) {
 
+
                         var extensionId = "pjljkkmedcfkbndfjcomilkiibpafaah";
                         var extPort = chrome.runtime.connect(extensionId);
+                          console.log("#extPort",extPort);
                         if (extPort) {
+
+                        $("#btn-screenshare").removeClass("hide").on("click", function () {
+                                                        extPort.postMessage("show", "dialog");
+                                                    });
+
                             extPort.onMessage.addListener(function (msg) {
 
                                 var constraints = {
@@ -293,19 +300,20 @@
                                         }
                                         video.poster = "//placehold.it/80x80?text=no+video";
                                         $("#remote-videos").prepend(video).hide().fadeIn();
+
+                                       screenShare();
+
                                 }, function (err) {
                                     console.log(err);
                                 });
                             });
-                            $("#btn-screenshare").removeClass("hide").on("click", function () {
-                                extPort.postMessage("show", "dialog");
-                            });
+                           
 
-                            app.rtcClient.Peers.forEach( function(peer) {
-                               peer.RTCPeer.close();
-                            });
+                            // app.rtcClient.Peers.forEach( function(peer) {
+                            //    peer.RTCPeer.close();
+                            // });
                                 
-                            app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
+                    //        app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
 
 
                         }
@@ -338,8 +346,9 @@
                         $(video).click(function (evt) {
                             setFullScreen(evt.target.srcObject);
                         });
+                        screenShare();
                     });
-                    screenShare();
+                 
                 }
 
                 $("#btn-join-default,#btn-join-av").on("click", function () {

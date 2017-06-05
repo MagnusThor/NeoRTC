@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "^4.15.3",
     "thor-io.client-vnext": "^1.0.4",
-    "webrtc-adapter": "^3.2.0"
+    "webrtc-adapter": "^4.0.0"
   },
   "devDependencies": {
     "webpack": "^2.3.3"

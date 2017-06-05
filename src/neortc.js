@@ -19,7 +19,7 @@ var NeoRTCApp = (function () {
         this.log("Created an instance of NeoRTCApp");
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
-        var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
+        var url = brokerUrl || "ws://webrtc-lab.herokuapp.com";
         factory = new ThorIOClient.Factory(url, ["contextBroker"]);
 
         factory.OnClose = function (reason) {
