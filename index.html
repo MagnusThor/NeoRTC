@@ -146,7 +146,6 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
 
-
     <script src="dist/neortc.js"></script>
 
     <script>
@@ -161,7 +160,6 @@
 
             app = new NeoRTC.Conference("wss://webrtc-lab.herokuapp.com");
 
-    
             app.OnInstantMessage = function (message) {
                 var dt = new Date(message.dt);
                 var p = $("<p>");
@@ -301,7 +299,7 @@
                                         video.poster = "//placehold.it/80x80?text=no+video";
                                         $("#remote-videos").prepend(video).hide().fadeIn();
 
-                                       screenShare();
+                                  
 
                                 }, function (err) {
                                     console.log(err);
@@ -334,9 +332,11 @@
                         var video = document.createElement("video");
                         video.muted = true;
                         video.srcObject = mediaStream;
+                        
                         video.oncanplay = function () {
                             video.play();
                         }
+
                         video.poster = "http://placehold.it/80x80?text=no+video";
 
                         $("#remote-videos").prepend(video).hide().fadeIn();

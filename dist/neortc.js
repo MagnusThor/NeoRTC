@@ -618,21 +618,17 @@ var ThorIOClient;
             });
             pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.message)));
             pc.createAnswer(function (description) {
-
-                pc.setLocalDescription(description,function() {
+                pc.setLocalDescription(description).then(function () {
+                    if (_this.bandwidthConstraints)
+                        description.sdp = _this.setMediaBitrates(description.sdp);
                     var answer = {
-                    sender: _this.LocalPeerId,
-                    recipient: event.sender,
-                    message: JSON.stringify(description)
-                };
-                _this.brokerProxy.Invoke("contextSignal", answer);
-                },function(err){
-                    console.log("err",err);
+                        sender: _this.LocalPeerId,
+                        recipient: event.sender,
+                        message: JSON.stringify(description)
+                    };
+                    _this.brokerProxy.Invoke("contextSignal", answer);
+                }).catch(function (err) {
                 });
-
-                if (_this.bandwidthConstraints)
-                    description.sdp = _this.setMediaBitrates(description.sdp);
-        
             }, function (err) {
                 _this.addError(err);
             }, {
@@ -665,9 +661,7 @@ var ThorIOClient;
         WebRTC.prototype.createPeerConnection = function (id) {
             var _this = this;
             var rtcPeerConnection = new RTCPeerConnection(this.rtcConfig);
-            rtcPeerConnection.onsignalingstatechange = function (state) {
-
-             };
+            rtcPeerConnection.onsignalingstatechange = function (state) { };
             rtcPeerConnection.onicecandidate = function (event) {
                 if (!event || !event.candidate)
                     return;
@@ -743,8 +737,8 @@ var ThorIOClient;
             });
             peerConnection.createOffer(function (description) {
                 peerConnection.setLocalDescription(description, function () {
-                    // if (_this.bandwidthConstraints)
-                    //     description.sdp = _this.setMediaBitrates(description.sdp);
+                    if (_this.bandwidthConstraints)
+                        description.sdp = _this.setMediaBitrates(description.sdp);
                     var offer = {
                         sender: _this.LocalPeerId,
                         recipient: peer.peerId,
@@ -4549,10 +4543,8 @@ var NeoRTCApp = (function () {
             ]
         };
         this.log("Created an instance of NeoRTCApp");
-        // We are using the "thor-io.vnext" backed
-        // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtc-lab.herokuapp.com";
-        factory = new __WEBPACK_IMPORTED_MODULE_0_thor_io_client_vnext__["ThorIOClient"].Factory(url, ["contextBroker"]);
+        factory = new __WEBPACK_IMPORTED_MODULE_0_thor_io_client_vnext__["ThorIOClient"].Factory(url, ["neoBroker"]);
 
         factory.OnClose = function (reason) {
             self.log(reason);
@@ -4560,14 +4552,9 @@ var NeoRTCApp = (function () {
 
         // We are connected to the "backend"
         factory.OnOpen = function (broker) {
+         
             broker.On("fileShare",function(fileInfo,arrayBuffer) { 
-                console.log(arguments);
-
-
                     var arr = new Uint8Array(arrayBuffer);
-
-                    console.log(arr);
-
                     self.OnFileReceived(fileInfo,new Blob([arr],{
                         type: fileInfo.type
                     }),arrayBuffer)
@@ -4591,12 +4578,8 @@ var NeoRTCApp = (function () {
             }
             // When a local stream is added
             self.rtcClient.OnLocalStream = function (mediaStream) {
-            
                 self.OnLocalStream(mediaStream)
             }
-
-
-
             // When we are on a new context, connect to it
             self.rtcClient.OnContextChanged = function (ctx) {
                 self.log("OnContextChanged", ctx);

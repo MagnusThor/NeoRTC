@@ -17,10 +17,8 @@ var NeoRTCApp = (function () {
             ]
         };
         this.log("Created an instance of NeoRTCApp");
-        // We are using the "thor-io.vnext" backed
-        // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtc-lab.herokuapp.com";
-        factory = new ThorIOClient.Factory(url, ["contextBroker"]);
+        factory = new ThorIOClient.Factory(url, ["neoBroker"]);
 
         factory.OnClose = function (reason) {
             self.log(reason);
@@ -28,14 +26,9 @@ var NeoRTCApp = (function () {
 
         // We are connected to the "backend"
         factory.OnOpen = function (broker) {
+         
             broker.On("fileShare",function(fileInfo,arrayBuffer) { 
-                console.log(arguments);
-
-
                     var arr = new Uint8Array(arrayBuffer);
-
-                    console.log(arr);
-
                     self.OnFileReceived(fileInfo,new Blob([arr],{
                         type: fileInfo.type
                     }),arrayBuffer)
@@ -59,12 +52,8 @@ var NeoRTCApp = (function () {
             }
             // When a local stream is added
             self.rtcClient.OnLocalStream = function (mediaStream) {
-            
                 self.OnLocalStream(mediaStream)
             }
-
-
-
             // When we are on a new context, connect to it
             self.rtcClient.OnContextChanged = function (ctx) {
                 self.log("OnContextChanged", ctx);
