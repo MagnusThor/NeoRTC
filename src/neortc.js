@@ -7,10 +7,12 @@ var NeoRTCApp = (function () {
         var factory;
 
         var rtcConfig = config || {
-            iceTransports: 'all',
-            iceServers: [
+            "iceTransports": 'all',
+            "rtcpMuxPolicy": "require", 
+            "bundlePolicy": "max-bundle",
+            "iceServers": [
                 {
-                    urls: "stun:stun.l.google.com:19302"
+                    "urls": "stun:stun.l.google.com:19302"
                 }
             ]
         };
@@ -18,7 +20,7 @@ var NeoRTCApp = (function () {
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
-        factory = new ThorIOClient.Factory(url, ["neoBroker"]);
+        factory = new ThorIOClient.Factory(url, ["contextBroker"]);
 
         factory.OnClose = function (reason) {
             self.log(reason);
@@ -57,7 +59,7 @@ var NeoRTCApp = (function () {
             }
             // When a local stream is added
             self.rtcClient.OnLocalStream = function (mediaStream) {
-              
+            
                 self.OnLocalStream(mediaStream)
             }
 

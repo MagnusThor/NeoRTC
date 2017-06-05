@@ -147,7 +147,7 @@
         crossorigin="anonymous"></script>
 
 
-    <script src="/dist/neortc.js"></script>
+    <script src="dist/neortc.js"></script>
 
     <script>
         var app;
@@ -159,7 +159,7 @@
                 el.srcObject = src;
             }
 
-            app = new NeoRTC.Conference("wss://webrtc-lab.herokuapp.com");
+            app = new NeoRTC.Conference("wss://webrtclab2.herokuapp.com");
 
     
             app.OnInstantMessage = function (message) {
@@ -217,8 +217,7 @@
             };
 
 
-            app.OnLocalStream = function (mediaStream) {}
-
+         
             app.OnRemoteStream = function (mediaStream) {
                 var video = document.createElement("video");
                 video.classList.add("remote-stream");
@@ -236,6 +235,7 @@
             }
 
             app.OnRemoteStreamlost = function (mediaStreamId) {
+              
                 var video = document.querySelector("#" + mediaStreamId);
                 document.querySelector("#remote-videos").removeChild(video);
             }

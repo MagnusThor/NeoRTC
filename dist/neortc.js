@@ -1276,6 +1276,7 @@ var ThorIOClient;
             var pc = this.getPeerConnection(event.sender);
             pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.message))).then(function (p) {
             }).catch(function (err) {
+            console.log("..");
                 _this.addError(err);
             });
         };
@@ -1363,6 +1364,7 @@ var ThorIOClient;
                 _this.OnRemoteStream(event.stream, connection);
             };
             this.DataChannels.forEach(function (dataChannel) {
+              
                 var pc = new PeerChannel(id, rtcPeerConnection.createDataChannel(dataChannel.Name), dataChannel.Name);
                 dataChannel.AddPeerChannel(pc);
                 rtcPeerConnection.ondatachannel = function (event) {
@@ -3908,10 +3910,12 @@ var NeoRTCApp = (function () {
         var factory;
 
         var rtcConfig = config || {
-            iceTransports: 'all',
-            iceServers: [
+            "iceTransports": 'all',
+            "rtcpMuxPolicy": "require", 
+            "bundlePolicy": "max-bundle",
+            "iceServers": [
                 {
-                    urls: "stun:stun.l.google.com:19302"
+                    "urls": "stun:stun.l.google.com:19302"
                 }
             ]
         };
@@ -3919,7 +3923,7 @@ var NeoRTCApp = (function () {
         // We are using the "thor-io.vnext" backed
         // deployed at 'https://webrtclab2.herokuapp.com/'
         var url = brokerUrl || "ws://webrtclab2.herokuapp.com";
-        factory = new __WEBPACK_IMPORTED_MODULE_0_thor_io_client_vnext__["ThorIOClient"].Factory(url, ["neoBroker"]);
+        factory = new __WEBPACK_IMPORTED_MODULE_0_thor_io_client_vnext__["ThorIOClient"].Factory(url, ["contextBroker"]);
 
         factory.OnClose = function (reason) {
             self.log(reason);
@@ -3958,7 +3962,7 @@ var NeoRTCApp = (function () {
             }
             // When a local stream is added
             self.rtcClient.OnLocalStream = function (mediaStream) {
-              
+            
                 self.OnLocalStream(mediaStream)
             }
 
