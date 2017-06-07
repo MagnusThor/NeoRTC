@@ -283,8 +283,6 @@ module.exports = adapterFactory({window: global.window});
 
 "use strict";
 
-/// <reference path="./typings/globals/webrtc/mediastream/index.d.ts" />
-/// <reference path="./typings/globals/webrtc/rtcpeerconnection/index.d.ts" />
 var ThorIOClient;
 (function (ThorIOClient) {
     var BinaryMessage = (function () {
@@ -294,14 +292,16 @@ var ThorIOClient;
             this.Buffer = this.joinBuffers(this.joinBuffers(this.header.buffer, ThorIOClient.Utils.stingToBuffer(message).buffer), arrayBuffer);
         }
         BinaryMessage.fromArrayBuffer = function (buffer) {
+            var bytes = new Uint8Array(buffer);
             var headerLen = 8;
-            var header = new Uint8Array(buffer, 0, headerLen);
+            var header = bytes.slice(0, 8);
             var payloadLength = ThorIOClient.Utils.arrayToLong(header);
-            var message = new Uint8Array(buffer, headerLen, payloadLength);
-            var blobOffset = headerLen + payloadLength;
-            var messageBuffer = new Uint8Array(buffer, blobOffset, buffer.byteLength - blobOffset);
-            var json = JSON.parse(String.fromCharCode.apply(null, new Uint16Array(message)));
-            return new Message(json.T, json.D, json.C, messageBuffer.buffer);
+            var start = header.byteLength + payloadLength;
+            var bytesMessage = bytes.slice(header.byteLength, start);
+            var stop = buffer.byteLength - start;
+            var messageBuffer = bytes.slice(start, stop);
+            var message = JSON.parse(String.fromCharCode.apply(null, new Uint16Array(bytesMessage)));
+            return new Message(message.T, message.D, message.C, messageBuffer);
         };
         BinaryMessage.prototype.joinBuffers = function (a, b) {
             var newBuffer = new Uint8Array(a.byteLength + b.byteLength);
@@ -335,19 +335,11 @@ var ThorIOClient;
             return JSON.stringify(this.JSON);
         };
         Message.fromArrayBuffer = function (buffer) {
-            var headerLen = 8;
-            var header = new Uint8Array(buffer, 0, headerLen);
-            var payloadLength = ThorIOClient.Utils.arrayToLong(header);
-            var message = new Uint8Array(buffer, headerLen, payloadLength);
-            var blobOffset = headerLen + payloadLength;
-            var messageBuffer = new Uint8Array(buffer, blobOffset, buffer.byteLength - blobOffset);
-            var json = JSON.parse(String.fromCharCode.apply(null, new Uint16Array(message)));
-            return new Message(json.T, json.D, json.C, messageBuffer.buffer);
+            return ThorIOClient.BinaryMessage.fromArrayBuffer(buffer);
         };
         return Message;
     }());
     ThorIOClient.Message = Message;
-    // todo: Move to separate namespace
     var PeerConnection = (function () {
         function PeerConnection() {
         }
@@ -417,7 +409,7 @@ var ThorIOClient;
         function PeerChannel(peerId, dataChannel, label) {
             this.peerId = peerId;
             this.dataChannel = dataChannel;
-            this.label = label; // name
+            this.label = label;
         }
         return PeerChannel;
     }());
@@ -496,6 +488,9 @@ var ThorIOClient;
             var _this = this;
             this.brokerProxy = brokerProxy;
             this.rtcConfig = rtcConfig;
+            this.getPeerIndex = function (id) {
+                return this.Peers.findIndex(function (pre) { return pre.id === id; });
+            };
             this.Errors = new Array();
             this.DataChannels = new Array();
             this.Peers = new Array();
@@ -569,7 +564,6 @@ var ThorIOClient;
                         _this.onCandidate(signal);
                         break;
                     default:
-                        // do op
                         break;
                 }
             });
@@ -714,8 +708,29 @@ var ThorIOClient;
             });
             return rtcPeerConnection;
         };
-        WebRTC.prototype.findPeerConnection = function (pre) {
-            throw "Not implemented";
+        WebRTC.prototype.findPeerConnection = function (id) {
+            var i = this.getPeerIndex(id);
+            return this.Peers[i];
+        };
+        WebRTC.prototype.reconnectAll = function () {
+            var _this = this;
+            var peers = this.Peers.map(function (peer) {
+                var p = new PeerConnection();
+                p.peerId = peer.id;
+                p.context = _this.Context;
+                return p;
+            });
+            peers.forEach(function (p) {
+                var peer = _this.getPeerIndex(p.peerId);
+                var peer = _this.getPeerIndex(p.peerId);
+                _this.Peers[peer].RTCPeer.close();
+                _this.Peers[peer].streams.forEach(function (stream) {
+                    _this.OnRemoteStreamlost(stream.id, p.peerId);
+                });
+            });
+            this.Peers = new Array();
+            this.Connect(peers);
+            return peers;
         };
         WebRTC.prototype.getPeerConnection = function (id) {
             var match = this.Peers.filter(function (connection) {
@@ -764,6 +779,10 @@ var ThorIOClient;
             });
             this.ChangeContext(Math.random().toString(36).substring(2));
         };
+        WebRTC.prototype.DisconnectPeer = function (id) {
+            var peer = this.findPeerConnection(id);
+            peer.RTCPeer.close();
+        };
         WebRTC.prototype.Connect = function (peerConnections) {
             var _this = this;
             peerConnections.forEach(function (peerConnection) {
@@ -801,7 +820,7 @@ var ThorIOClient;
                     _this.GetProxy(message.C).Dispatch(message.T, message.D);
                 }
                 else {
-                    var message = ThorIOClient.Message.fromArrayBuffer(event.data);
+                    var message = ThorIOClient.BinaryMessage.fromArrayBuffer(event.data);
                     _this.GetProxy(message.C).Dispatch(message.T, message.D, message.B);
                 }
             };
@@ -4549,15 +4568,10 @@ var NeoRTCApp = (function () {
         factory.OnClose = function (reason) {
             self.log(reason);
         }
-
-        // We are connected to the "backend"
-        factory.OnOpen = function (broker) {
-         
-            broker.On("fileShare",function(fileInfo,arrayBuffer) { 
-                    var arr = new Uint8Array(arrayBuffer);
-                    self.OnFileReceived(fileInfo,new Blob([arr],{
-                        type: fileInfo.type
-                    }),arrayBuffer)
+     // We are connected to the "backend"
+        factory.OnOpen = function (broker) {         
+            broker.On("fileShare",function(fileinfo,arrayBuffer) { 
+                    self.OnFileReceived(fileinfo,arrayBuffer)
             });
 
             broker.On("instantMessage",function(im){
@@ -4657,7 +4671,7 @@ var NeoRTCApp = (function () {
     neoRTC.prototype.rtcClient = {};
 
 
-    neoRTC.prototype.OnFileReceived = function(fileIinfo,blob,buffer){
+    neoRTC.prototype.OnFileReceived = function(fileIinfo,buffer){
 
     }
 
@@ -4701,8 +4715,7 @@ var NeoRTCApp = (function () {
     }
 
 
-    neoRTC.prototype.OnInstantMessage = function(instantMessage){
-            
+    neoRTC.prototype.OnInstantMessage = function(instantMessage){       
     }
 
     neoRTC.prototype.OnRemoteStream = function (a, b) {

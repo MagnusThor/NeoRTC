@@ -23,15 +23,10 @@ var NeoRTCApp = (function () {
         factory.OnClose = function (reason) {
             self.log(reason);
         }
-
-        // We are connected to the "backend"
-        factory.OnOpen = function (broker) {
-         
-            broker.On("fileShare",function(fileInfo,arrayBuffer) { 
-                    var arr = new Uint8Array(arrayBuffer);
-                    self.OnFileReceived(fileInfo,new Blob([arr],{
-                        type: fileInfo.type
-                    }),arrayBuffer)
+     // We are connected to the "backend"
+        factory.OnOpen = function (broker) {         
+            broker.On("fileShare",function(fileinfo,arrayBuffer) { 
+                    self.OnFileReceived(fileinfo,arrayBuffer)
             });
 
             broker.On("instantMessage",function(im){
@@ -131,7 +126,7 @@ var NeoRTCApp = (function () {
     neoRTC.prototype.rtcClient = {};
 
 
-    neoRTC.prototype.OnFileReceived = function(fileIinfo,blob,buffer){
+    neoRTC.prototype.OnFileReceived = function(fileIinfo,buffer){
 
     }
 
@@ -175,8 +170,7 @@ var NeoRTCApp = (function () {
     }
 
 
-    neoRTC.prototype.OnInstantMessage = function(instantMessage){
-            
+    neoRTC.prototype.OnInstantMessage = function(instantMessage){       
     }
 
     neoRTC.prototype.OnRemoteStream = function (a, b) {

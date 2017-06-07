@@ -44,6 +44,11 @@
             margin-right: 10px;
         }
 
+         #instant-messages img{
+             max-height: 40px;
+             margin: 10px 0;
+         }
+
         #fullscreen-video video {
             position: fixed;
             top: 50%;
@@ -108,11 +113,7 @@
 
         <div class="row" id="conference">
             <div class="col-xs-12">
-
                   <button id="btn-screenshare" class="btn btn-success hide">Screen share</button>
-
-
-
                 <div id="remote-videos">
                 </div>
 
@@ -120,7 +121,7 @@
         </div>
 
 
-        <section id="chat-controls" class="hide" data-uid="">
+        <section id="chat-controls" class="hide" data-uid="dathor">
             <div class="row">
                 <div class="col-xs-12">
 
@@ -132,7 +133,7 @@
                             <input type="text" id="instant-message" placeholder="Enter a chat message" class="form-control">
                             <span class="input-group-btn">
                             <label class="btn btn-default btn-file">
-                                    SHARE <input type="file" id="share-file" style="display: none;">
+                                Share file <input type="file" id="share-file" style="display: none;">
                                 </label>
                             </span>
                         </div>
@@ -151,236 +152,13 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" 
+    integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
 
     <script src="dist/neortc.js"></script>
 
-    <script>
-        var app;
-
-        $(function () {
-      
-            var setFullScreen = function (src) {
-                var el = $("#fullscreen-video video")[0];
-                el.srcObject = src;
-            }
-
-            app = new NeoRTC.Conference("wss://webrtc-lab.herokuapp.com");
-
-            app.OnInstantMessage = function (message) {
-                var dt = new Date(message.dt);
-                var p = $("<p>");
-                p.text(message.text);
-                var time = $("<time>");
-                time.text(dt.getHours().toString() + ":" + dt.getMinutes().toString());
-                var uid = $("<mark>");
-                uid.text(message.uid);
-                $(p).prepend(uid);
-                $(p).prepend(time);
-
-                $("#instant-messages").prepend(p);
-            }
-
-            $("#share-file").on("change", function (evt) {
-                var file = evt.target.files[0];
-                var reader = new FileReader();
-                reader.onload = (function (theFile) {
-                    return function (buffer) {
-                        var bm = app.sendFile({
-                            name:file.name,
-                            size: file.size,
-                            type: file.type
-                        }, buffer.target.result);
-                    }
-                })(file);
-                reader.readAsArrayBuffer(file);
-            });
-
-            app.OnFileReceived = function(fileinfo,blob,buffer){
-
-                var dt = new Date();
-
-                var p = $("<p>");
-                    p.text("File received.");
-                var time = $("<time>");
-
-                    time.text(dt.getHours().toString() + ":" + dt.getMinutes().toString());
-                
-                var download = $("<a>");
-                download.attr("href", URL.createObjectURL(blob));
-                download.text(fileinfo.name);
-                download.attr("download",fileinfo.name);
-
-                $(p).append(download); 
-
-                $(p).prepend(time);
-
-                 $("#instant-messages").prepend(p);
-
-
-
-            };
-
-
-         
-            app.OnRemoteStream = function (mediaStream) {
-                var video = document.createElement("video");
-                video.classList.add("remote-stream");
-                video.id = mediaStream.id;
-                video.srcObject = mediaStream;
-                video.oncanplay = function () {
-                    video.play();
-                }
-                document.querySelector("#remote-videos").appendChild(video);
-
-                $(video).click(function (evt) {
-                    setFullScreen(evt.target.srcObject);
-                });
-
-            }
-
-            app.OnRemoteStreamlost = function (mediaStreamId) {
-              
-                var video = document.querySelector("#" + mediaStreamId);
-                document.querySelector("#remote-videos").removeChild(video);
-            }
-
-            app.OnReady = function () {
-
-                window.onhashchange = function (hashchange) {
-                    //        app.ChangeContext(location.hash);
-                }
-                // add an event listener for the IM thing
-                document.querySelector("#instant-message").addEventListener("keydown", function (evt) {
-                    if (evt.keyCode === 13) {
-                        var model = {
-                            text: this.value,
-                            uid: 'Foo',
-                            dt: new Date()
-                        };
-                        evt.preventDefault();
-                        app.sendInstantMessage(model);
-                        this.value = "";
-
-                        console.log("do ajax post tp mvc", model);
-
-                    }
-                });
-
-
-                var screenShare = function(){
-                        if (chrome.runtime) {
-
-                        var extensionId = "pjljkkmedcfkbndfjcomilkiibpafaah";
-                        var extPort = chrome.runtime.connect(extensionId);
-                        
-                        if (extPort) {
-
-                        $("#btn-screenshare").removeClass("hide").on("click", function () {
-                                extPort.postMessage("show", "dialog");
-                        });
-
-                            extPort.onMessage.addListener(function (msg) {
-
-                                var constraints = {
-                                    video: {
-                                        mandatory: {
-                                            chromeMediaSource: 'desktop',
-                                            chromeMediaSourceId: msg.desktopId,
-                                            minWidth: 1280,
-                                            maxWidth: 1280,
-                                            minHeight: 720,
-                                            maxHeight: 720
-                                        }
-                                    }
-                                };
-                                navigator.getUserMedia(constraints, function (mediaStream) {
-                                    app.AddLocalStream(mediaStream);
-
-                                        var video = document.createElement("video");
-                                        video.muted = true;
-                                        video.srcObject = mediaStream;
-                                        video.oncanplay = function () {
-                                            video.play();
-                                        }
-                                        video.poster = "//placehold.it/80x80?text=no+video";
-                                        $("#remote-videos").prepend(video).hide().fadeIn();
-
-                                        window.setTimeout(function(){
-                                            app.reconnectAll();
-                                        },1500);
-                                  
-
-                                }, function (err) {
-                                    console.log(err);
-                                });
-                            });
-                           
-
-                          
-
-
-                        }
-                    }
-
-                }
-
-                var joinConference = function (settings) {
-
-                    app.getUserMedia(settings, function (mediaStream) {
-
-                        $(".join").fadeOut(function () {
-                            $("#conference").removeClass("hide").fadeIn();
-                        });
-
-                        app.ChangeContext(location.hash == "" ? "lobby" : location.hash);
-
-                        var video = document.createElement("video");
-                        video.muted = true;
-                        video.srcObject = mediaStream;
-                        
-                        video.oncanplay = function () {
-                            video.play();
-                        }
-
-                        video.poster = "http://placehold.it/80x80?text=no+video";
-
-                        $("#remote-videos").prepend(video).hide().fadeIn();
-
-                        $("#chat-controls").removeClass("hide").fadeIn(function () {});
-
-                        $(video).click(function (evt) {
-                            setFullScreen(evt.target.srcObject);
-                        });
-                        screenShare();
-                    });
-                 
-                }
-
-                $("#btn-join-default,#btn-join-av").on("click", function () {
-
-                    joinConference({
-                        video: true,
-                        audio: true
-                    });
-
-                });
-
-                $("#btn-join-a").on("click", function () {
-
-                    joinConference({
-                        video: false,
-                        audio: true
-                    });
-                });
-
-            }
-
-
-
-        });
-    </script>
+    <script src="app.js"></script>
 
 </body>
 
